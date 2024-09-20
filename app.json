@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Digicard",
+    "scheme": "digicard",
     "slug": "Digicard",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,10 +19,25 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.myk1.Digicard"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "@react-native-google-signin/google-signin"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "477fc608-dd0c-4d1b-912d-d3c6b976a673"
+      }
+  
     }
   }
 }
