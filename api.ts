@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.11.108:3100";
+const API_URL = "http://192.168.11.105:3100";
 
 
 export async function fetchData(route: string): Promise<any> {

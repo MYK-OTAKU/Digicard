@@ -144,16 +144,21 @@ const FavoritesScreen: React.FC = () => {
                     <Text style={styles.adText}>Publicité pour notre société</Text>
                 </View>
             )}
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Result', { 
-                type: item.type, 
-                data: item.data, 
-                urlSafety: item.urlSafety, 
-                id: item.id, 
-                date: item.date, // Ajout de la propriété date
-                isFavorite: item.isFavorite, // Ajout de la propriété isFavorite
+            <TouchableOpacity style={styles.card} onPress={() => {
+                navigation.navigate('Result', { 
+                    type: item.type, 
+                    data: item.data, 
+                    urlSafety: item.urlSafety, 
+                    id: item.id, 
+                    date: item.date, // Ajout de la propriété date
+                    isFavorite: item.isFavorite, // Ajout de la propriété isFavorite
                 onToggleFavorite: () => handleToggleFavorite(item.id, item.isFavorite),
-                imageUrl: item.imageUrl // Ajout de la propriété imageUrl
-            })}>
+                    imageUrl: item.imageUrl // Ajout de la propriété imageUrl
+                });
+                navigation.setOptions({
+                    onToggleFavorite: () => handleToggleFavorite(item.id, item.isFavorite)
+                });
+            }}>
                 <View style={styles.iconContainer}>
                     <Icon name={getIconName(item.type)} size={25} color="gray" />
                 </View>

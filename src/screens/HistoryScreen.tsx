@@ -1,4 +1,3 @@
-// src/screens/HistoryScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Linking } from 'react-native';
 import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
@@ -9,6 +8,7 @@ import { NavigationProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import moment from 'moment';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 type HistoryScreenRouteProp = RouteProp<RootStackParamList, 'History'>;
 
@@ -19,13 +19,14 @@ const HistoryScreen: React.FC = () => {
   const [sortOption, setSortOption] = useState<string>('date');
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<HistoryScreenRouteProp>();
+
   useEffect(() => {
     // Customiser le header pour inclure l'icône de menu
     navigation.setOptions({
       headerRight: () => (
         <Menu>
           <MenuTrigger>
-            <Icon name="more-vert" size={25} color="gray" />
+            <Icon  style={styles.iconmenu} name="more-vert" size={28} color="#4A4A4A" />
           </MenuTrigger>
           <MenuOptions>
             <MenuOption onSelect={() => handleMenuAction('sortByDate')}>
@@ -42,6 +43,7 @@ const HistoryScreen: React.FC = () => {
       ),
     });
   }, [navigation]);
+
   const fetchHistory = useCallback(async () => {
     setLoading(true);
     const response = await fetchData('scans/history/1');
@@ -86,7 +88,20 @@ const HistoryScreen: React.FC = () => {
     }
   };
 
+  const authenticate = async () => {
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate to proceed',
+    });
+    return result.success;
+  };
+
   const handleDeleteAllScans = async () => {
+    const isAuthenticated = await authenticate();
+    if (!isAuthenticated) {
+      Alert.alert('Authentication failed', 'Unable to delete all scans.');
+      return;
+    }
+
     Alert.alert(
       'Confirm Delete All',
       'Are you sure you want to delete all scans?',
@@ -100,6 +115,32 @@ const HistoryScreen: React.FC = () => {
           } else {
             Alert.alert('Erreur', response.message);
             console.error('Error deleting all scans:', response.message);
+          }
+        }},
+      ]
+    );
+  };
+
+  const handleDeleteScan = async (id: number) => {
+    const isAuthenticated = await authenticate();
+    if (!isAuthenticated) {
+      Alert.alert('Authentication failed', 'Unable to delete the scan.');
+      return;
+    }
+
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this scan?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Yes', onPress: async () => {
+          const response = await deleteScan(id);
+          if (response.success) {
+            setHistory((prevHistory) => prevHistory.filter((scan) => scan.id !== id));
+            setOriginalHistory((prevHistory) => prevHistory.filter((scan) => scan.id !== id));
+          } else {
+            Alert.alert('Erreur', response.message);
+            console.error(`Error deleting scan ID ${id}:`, response.message);
           }
         }},
       ]
@@ -123,26 +164,6 @@ const HistoryScreen: React.FC = () => {
       Alert.alert('Erreur', response.message);
       console.error(`Error toggling favorite status for scan ID ${id}:`, response.message);
     }
-  };
-
-  const handleDeleteScan = async (id: number) => {
-    Alert.alert(
-      'Confirm Delete',
-      'Are you sure you want to delete this scan?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Yes', onPress: async () => {
-          const response = await deleteScan(id);
-          if (response.success) {
-            setHistory((prevHistory) => prevHistory.filter((scan) => scan.id !== id));
-            setOriginalHistory((prevHistory) => prevHistory.filter((scan) => scan.id !== id));
-          } else {
-            Alert.alert('Erreur', response.message);
-            console.error(`Error deleting scan ID ${id}:`, response.message);
-          }
-        }},
-      ]
-    );
   };
 
   const sortHistory = (option: string) => {
@@ -331,7 +352,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    marginLeft: 8,
+    marginLeft: 10,
     alignItems: 'center',
   },
   emptyText: {
@@ -367,7 +388,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#00796b',
     fontSize: 16,
-  },
+  },iconmenu :{
+    marginRight : 10,
+  }
 });
 
 export default HistoryScreen;

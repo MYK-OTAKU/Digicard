@@ -5,10 +5,10 @@
     "slug": "Digicard",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo2.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,18 +17,25 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/logo2.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.myk1.Digicard"
+      "package": "com.myk1.Digicard",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CHANGE_WIFI_STATE",
+        "ACCESS_WIFI_STATE"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo.png"
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "react-native-wifi-reborn"
     ],
     "extra": {
       "router": {
@@ -37,7 +44,6 @@
       "eas": {
         "projectId": "477fc608-dd0c-4d1b-912d-d3c6b976a673"
       }
-  
     }
   }
 }

@@ -1,7 +1,6 @@
-// src/screens/ResultScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 import { postData, toggleFavorite } from '../../api';
 import { URLResult } from '../components/URLResult';
@@ -16,6 +15,7 @@ type ResultScreenRouteProp = RouteProp<RootStackParamList, 'Result'>;
 
 const ResultScreen: React.FC = () => {
   const route = useRoute<ResultScreenRouteProp>();
+  const navigation = useNavigation();
   const { type, data, urlSafety, id, date, isFavorite, imageUrl } = route.params;
 
   const [safetyData, setSafetyData] = useState<any>(urlSafety);
@@ -24,14 +24,22 @@ const ResultScreen: React.FC = () => {
   const [key, setKey] = useState<string>(id ? id.toString() : 'defaultKey');
 
   useEffect(() => {
+    console.log("Params updated:", route.params);
+    console.log('Favoris/Historique Data:', { type, data });
     setSafetyData(urlSafety);
     setFavorite(isFavorite);
     setKey(id ? id.toString() : 'defaultKey');
   }, [route.params]);
 
+  useEffect(() => {
+    navigation.setOptions({
+      onToggleFavorite: handleToggleFavorite,
+    });
+  }, [favorite]);
+
   const handleCheckSafety = async () => {
     if (!id) {
-      Alert.alert('Erreur', 'L\'ID du scan est manquant');
+      Alert.alert('Erreur', "L'ID du scan est manquant");
       return;
     }
 
@@ -55,7 +63,7 @@ const ResultScreen: React.FC = () => {
     try {
       const result = await toggleFavorite(id, favorite);
       if (result.success) {
-        setFavorite(!favorite); // Inverse l'état du favori
+        setFavorite(!favorite);
         Alert.alert('Succès', result.message);
       } else {
         Alert.alert('Erreur', result.message);
@@ -65,8 +73,49 @@ const ResultScreen: React.FC = () => {
     }
   };
 
-  // Fonction pour afficher le résultat du scan en fonction de son type
+  const renderWiFiResult = () => {
+    let wifiData = data;
+
+    // Check if the data is a string and not an object
+    if (typeof wifiData === 'string') {
+      try {
+        // Try parsing it as JSON (in case it's serialized JSON)
+        wifiData = JSON.parse(wifiData);
+      } catch {
+        // If not JSON, treat it as a custom string format like "SSID PASSWORD"
+        const wifiDataArray = wifiData.split(/\s+/);
+        if (wifiDataArray.length >= 2) {
+          wifiData = {
+            ssid: wifiDataArray[0],
+            password: wifiDataArray[1],
+            type: 'WPA' // Ajout de la propriété 'type'
+          } as any; // Cast pour éviter l'erreur de type
+        } else {
+          console.error('Erreur de parsing des données WiFi:', wifiData);
+          Alert.alert('Erreur', 'Les données WiFi sont mal formatées.');
+          return <TextResult data={wifiData} />;
+        }
+      }
+    }
+
+    if (typeof wifiData !== 'object' || !('ssid' in wifiData) || !('password' in wifiData)) {
+      console.error('Données WiFi invalides:', wifiData);
+      Alert.alert('Erreur', 'Les données WiFi sont mal formatées.');
+      return <TextResult data={JSON.stringify(wifiData)} />;
+    }
+
+    return (
+      <WiFiResult
+        data={wifiData}
+        date={date}
+        isFavorite={favorite}
+        onToggleFavorite={handleToggleFavorite}
+      />
+    );
+  };
+
   const renderResult = () => {
+    console.log("Rendering result for type:", type);
     switch (type) {
       case 'URL':
         return (
@@ -82,26 +131,7 @@ const ResultScreen: React.FC = () => {
           />
         );
       case 'WiFi':
-        if (typeof data !== 'string' || !data.includes(' ')) {
-          // Check if data is valid before attempting to split
-          Alert.alert('Erreur', 'Les données WiFi sont mal formatées');
-          return <TextResult data={data} />;
-        }
-
-        const wifiDataArray = data.split(/\s+/); // Utilise un `split` sécurisé pour les WiFi
-        if (wifiDataArray.length < 2) {
-          Alert.alert('Erreur', 'Les données WiFi sont mal formatées');
-          return <TextResult data={data} />;
-        }
-
-        return (
-          <WiFiResult
-            data={JSON.stringify({ ssid: wifiDataArray[0], password: wifiDataArray[1] })}
-            date={date}
-            isFavorite={favorite}
-            onToggleFavorite={handleToggleFavorite}
-          />
-        );
+        return renderWiFiResult();
       case 'vCard':
         return <VCardResult data={data} />;
       case 'SMS':

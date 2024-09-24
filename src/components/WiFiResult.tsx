@@ -1,29 +1,26 @@
-// src/components/WiFiResult.tsx
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Share, Platform, Linking } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import * as Linking from 'expo-linking';
+import WifiManager from "react-native-wifi-reborn";
+import { useNavigation } from '@react-navigation/native';
 
 interface WiFiResultProps {
-  data: string;
+  data: { ssid: string, password: string, type?: string };
   date: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
 }
 
-const connectToWiFi = async (ssid: string) => {
+const connectToWiFi = async (ssid: string, password: string) => {
   console.log('Attempting to connect to WiFi:', ssid);
   Alert.alert('Connecting', `Attempting to connect to the WiFi network "${ssid}"...`);
   try {
-    const url = `wifi://${ssid}`;
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-      Alert.alert("Success", "You have been redirected to WiFi settings.");
+    if (Platform.OS === 'android') {
+      await WifiManager.connectToProtectedSSID(ssid, password, false);
+      Alert.alert("Success", `Connected to WiFi network "${ssid}".`);
     } else {
-      Alert.alert("Error", "Failed to redirect to WiFi settings.");
-            console.error("Cannot open WiFi URL:", url);
+      Alert.alert("Info", "Connecting to WiFi is not supported on iOS through this method.");
     }
   } catch (error) {
     Alert.alert("Error", "Failed to connect to WiFi.");
@@ -31,14 +28,22 @@ const connectToWiFi = async (ssid: string) => {
   }
 };
 
+const openWiFiSettings = () => {
+  if (Platform.OS === 'android') {
+    Linking.openSettings();
+  } else {
+    Linking.openURL('App-Prefs:root=WIFI');
+  }
+};
+
 const copyPassword = (password: string) => {
-    console.log('Copying WiFi password to clipboard:', password);
+  console.log('Copying WiFi password to clipboard:', password);
   Clipboard.setString(password);
   Alert.alert('Password Copied', 'The WiFi password has been copied to your clipboard.');
 };
 
 const shareWiFiInfo = async (ssid: string, password: string) => {
-    console.log('Sharing WiFi info:', ssid, password);
+  console.log('Sharing WiFi info:', ssid, password);
   const message = `WiFi SSID: ${ssid}\nPassword: ${password}`;
   try {
     await Share.share({ message });
@@ -49,25 +54,21 @@ const shareWiFiInfo = async (ssid: string, password: string) => {
 };
 
 export const WiFiResult: React.FC<WiFiResultProps> = ({ data, date, isFavorite, onToggleFavorite }) => {
-    console.log('Rendering WiFiResult component with data:', data);
-  let wifiData;
-  try {
-    wifiData = JSON.parse(data);
-        console.log('Parsed WiFi data:', wifiData);
-  } catch (error) {
-        console.error("Invalid JSON:", error, "Raw data:", data);
-    return (
-      <View style={styles.container}>
-        <Text style={styles.dataText}>Error: Invalid WiFi data format.</Text>
-      </View>
-    );
-  }
+  const navigation = useNavigation();
 
-  if (!wifiData.ssid || !wifiData.password) {
-        console.error("WiFi data is missing ssid or password. Data:", wifiData);
+  React.useEffect(() => {
+    navigation.setOptions({
+      onToggleFavorite,
+    });
+  }, [navigation, onToggleFavorite]);
+
+  console.log('Rendering WiFiResult component with data:', data);
+
+  if (!data.ssid || !data.password) {
+    console.error("WiFi data is missing ssid or password. Data:", data);
     return (
       <View style={styles.container}>
-                <Text style={styles.dataText}>Error: WiFi data is missing SSID or password.</Text>
+        <Text style={styles.dataText}>Error: WiFi data is missing SSID or password.</Text>
       </View>
     );
   }
@@ -77,20 +78,24 @@ export const WiFiResult: React.FC<WiFiResultProps> = ({ data, date, isFavorite, 
       <View style={styles.header}>
         <MaterialIcons name="wifi" size={24} color="#1E88E5" />
         <Text style={styles.title}>WiFi</Text>
-                <Text style={styles.dateText}>{date}</Text>
+        <Text style={styles.date}>{date}</Text>
       </View>
-      <Text style={styles.dataText}>Network Name: {wifiData.ssid}</Text>
-      <Text style={styles.dataText}>Password: {wifiData.password}</Text>
+      <Text style={styles.dataText}>Network Name: {data.ssid || 'N/A'}</Text>
+      <Text style={styles.dataText}>Type: {data.type || 'N/A'}</Text>
+      <Text style={styles.dataText}>Password: {data.password || 'N/A'}</Text>
       <View style={styles.actionsSection}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => connectToWiFi(wifiData.ssid)}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          openWiFiSettings();
+          copyPassword(data.password);
+        }}>
           <MaterialIcons name="wifi" size={30} color="white" />
           <Text style={styles.buttonText}>Connect</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => copyPassword(wifiData.password)}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => copyPassword(data.password)}>
           <FontAwesome name="copy" size={30} color="white" />
           <Text style={styles.buttonText}>Copy Password</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => shareWiFiInfo(wifiData.ssid, wifiData.password)}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => shareWiFiInfo(data.ssid, data.password)}>
           <FontAwesome name="share" size={30} color="white" />
           <Text style={styles.buttonText}>Share</Text>
         </TouchableOpacity>
@@ -122,11 +127,11 @@ const styles = StyleSheet.create({
     color: '#1E88E5',
     marginLeft: 8,
   },
-    dateText: {
-        marginLeft: 15,
-        fontSize: 14,
-        color: '#6c757d',
-    },
+  date: {
+    marginLeft: 'auto',
+    fontSize: 12,
+    color: '#777',
+  },
   dataText: {
     fontSize: 16,
     color: '#333',
