@@ -3,15 +3,19 @@
     "version": ">= 10.2.2"
   },
   "build": {
-    "development": {
+    "development": {    
+      "extends": "production",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "extends": "production"
+
     },
     "production": {}
   },
+  
   "submit": {
     "production": {}
   }

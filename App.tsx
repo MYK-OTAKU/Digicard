@@ -1,3 +1,4 @@
+// App.tsx
 import React, { useEffect, useState, useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -106,70 +107,65 @@ const App: React.FC = () => {
               initialRouteName={isFingerprintAuthEnabled ? 'FingerprintAuth' : 'Scan'}
               drawerContent={(props) => <CustomDrawerContent {...props} />}
             >
-       <Drawer.Screen
-  name="Scan"
-  component={ScanScreen}
-  options={({ navigation }) => ({
-    drawerIcon: ({ color, size }) => (
-      <MaterialIcons name="camera-alt" size={size} color={color} />
-    ),
-    headerTransparent: true,
-    headerTitle: '',
-    headerLeft: () => (
-      <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
-        <MaterialIcons name="menu" size={28} color="white" />
-      </TouchableOpacity>
-    ),
-    // Passer les actions du header ici
-    headerRight: () => (
-      <View style={styles.headerRight}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.setParams({ action: 'toggleTorch' })}>
-          <MaterialIcons name="flash-on" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.setParams({ action: 'switchCamera' })}>
-          <MaterialIcons name="rotate-right" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.setParams({ action: 'zoomIn' })}>
-          <MaterialIcons name="zoom-in" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.setParams({ action: 'zoomOut' })}>
-          <MaterialIcons name="zoom-out" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-    ),
-    headerStyle: {
-      elevation: 0, // Remove shadow
-    },
-  })}
-/>
-
-        <Drawer.Screen
-        name="FingerprintAuth"
-        component={FingerprintAuthScreen}
-        options={{
-          drawerItemStyle: { display: 'none' },
-          headerTransparent: false,
-          headerTitle: 'Fingerprint Authentication',
-        }}
-      />
-        <Drawer.Screen
-          name="History"
-          component={HistoryScreen}
-          options={{
-            drawerIcon: ({ color, size }) => (
+              <Drawer.Screen
+                name="Scan"
+                component={ScanScreen}
+                options={({ navigation }) => ({
+                  drawerIcon: ({ color, size }) => (
+                    <MaterialIcons name="camera-alt" size={size} color={color} />
+                  ),
+                  headerTransparent: true,
+                  headerTitle: '',
+                  headerLeft: () => (
+                    <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
+                      <MaterialIcons name="menu" size={24} color="white" />
+                    </TouchableOpacity>
+                  ),
+                  headerRight: () => (
+                    <View style={styles.headerRight}>
+                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'toggleTorch' })}>
+                        <MaterialIcons name="flash-on" size={24} color="white" />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'switchCamera' })}>
+                        <MaterialIcons name="rotate-right" size={24} color="white" />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'zoomIn' })}>
+                        <MaterialIcons name="zoom-in" size={24} color="white" />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'zoomOut' })}>
+                        <MaterialIcons name="zoom-out" size={24} color="white" />
+                      </TouchableOpacity>
+                    </View>
+                  ),
+                })}
+              />
+              <Drawer.Screen
+                name="FingerprintAuth"
+                component={FingerprintAuthScreen}
+                options={{
+                  drawerItemStyle: { display: 'none' },
+                  headerTransparent: false,
+                  headerTitle: 'Fingerprint Authentication',
+                }}
+              />
+              <Drawer.Screen
+                name="History"
+                component={HistoryScreen}
+                options={{
+                  drawerIcon: ({ color, size }) => (
                     <MaterialIcons name="history" size={size} color={color} />
-            ),
+                  ),
                   headerTransparent: false,
                   headerTitle: 'History',
-          }}
-        />
-        <Drawer.Screen
-          name="Favorites"
-          component={FavoritesScreen}
-          options={{
-            drawerIcon: ({ color, size }) => (
+                }}
+              />
+              <Drawer.Screen
+                name="Favorites"
+                component={FavoritesScreen}
+                options={{
+                  drawerIcon: ({ color, size }) => (
                     <MaterialIcons name="favorite" size={size} color={color} />
-            ),
+                  ),
                   headerTransparent: false,
                   headerTitle: 'Favorites',
                 }}
@@ -186,31 +182,31 @@ const App: React.FC = () => {
                   ),
                 })}
               />
-        <Drawer.Screen
-          name="User"
-          component={UserScreen}
-          options={{
-            drawerIcon: ({ color, size }) => (
-              <FontAwesome name="user" size={size} color={color} />
-            ),
+              <Drawer.Screen
+                name="User"
+                component={UserScreen}
+                options={{
+                  drawerIcon: ({ color, size }) => (
+                    <FontAwesome name="user" size={size} color={color} />
+                  ),
                   headerTransparent: false,
                   headerTitle: 'User',
-          }}
-        />
-        <Drawer.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{
-            drawerIcon: ({ color, size }) => (
+                }}
+              />
+              <Drawer.Screen
+                name="Settings"
+                component={SettingsScreen}
+                options={{
+                  drawerIcon: ({ color, size }) => (
                     <MaterialIcons name="settings" size={size} color={color} />
-            ),
+                  ),
                   headerTransparent: false,
                   headerTitle: 'Settings',
-          }}
-        />
-      </Drawer.Navigator>
+                }}
+              />
+            </Drawer.Navigator>
           </AuthGuard>
-    </NavigationContainer>
+        </NavigationContainer>
       </MenuProvider>
     </AuthProvider>
   );
@@ -218,12 +214,10 @@ const App: React.FC = () => {
 
 const styles = StyleSheet.create({
   iconButton: {
-    marginHorizontal: 10, 
-    // backgroundColor:'red',
+    marginHorizontal: 10,
   },
   headerRight: {
     flexDirection: 'row',
-    // backgroundColor:'blue',
   },
 });
 
