@@ -11,8 +11,8 @@ import { postData } from '../../api'; // Assurez-vous que le chemin est correct
 type RootStackParamList = {
   Scan: { action?: string }; // Paramètre optionnel pour indiquer l'action à effectuer lors du scan
   Result: { type: string; data: string; id: number; imageUrl: string }; // Paramètres à passer lors de la navigation vers l'écran des résultats
-  History: undefined; // Aucun paramètre requis pour l'historique
-  Favorites: undefined; // Aucun paramètre requis pour les favoris
+  History: undefined;
+  Favorites: undefined;
 };
 
 // Composant principal pour l'écran de scan
@@ -27,9 +27,10 @@ const ScanScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>(); // Navigation entre les écrans
   const route = useRoute<RouteProp<RootStackParamList, 'Scan'>>(); // Accès aux paramètres de la route actuelle
 
-  // useEffect pour gérer les actions reçues via les paramètres de navigation
+  // Gérer les actions reçues via les paramètres de navigation
   useEffect(() => {
     if (route.params?.action) {
+      console.log('Action reçue : ', route.params.action);
       if (route.params.action === 'toggleTorch') {
         toggleTorch(); // Si l'action est "toggleTorch", on active/désactive la torche
       } else if (route.params.action === 'switchCamera') {
@@ -40,29 +41,29 @@ const ScanScreen: React.FC = () => {
         zoomOut(); // Zoom arrière
       }
     }
-	}, [route.params?.action]);
+  }, [route.params?.action]);
 
-	useEffect(() => {
-		// Customiser le header pour inclure les actions
-		navigation.setOptions({
-			headerRight: () => (
-				<View style={styles.headerActions}>
-					<TouchableOpacity style={styles.iconButton} onPress={toggleTorch}>
+  // Ajout des actions dans le header
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={toggleTorch}>
 						<MaterialIcons name={torch ? "flash-off" : "flash-on"} size={24} color="white" />
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.iconButton} onPress={switchCamera}>
-						<MaterialIcons name="rotate-right" size={24} color="white" />
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.iconButton} onPress={zoomIn}>
-						<MaterialIcons name="zoom-in" size={24} color="white" />
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.iconButton} onPress={zoomOut}>
-						<MaterialIcons name="zoom-out" size={24} color="white" />
-					</TouchableOpacity>
-				</View>
-			),
-		});
-	}, [navigation, torch]);
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={switchCamera}>
+            <MaterialIcons name="rotate-right" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={zoomIn}>
+            <MaterialIcons name="zoom-in" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={zoomOut}>
+            <MaterialIcons name="zoom-out" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, [navigation, torch]);
 
   if (!permission) {
     return <View />;
@@ -90,72 +91,74 @@ const ScanScreen: React.FC = () => {
 
   // Fonction pour zoomer
   const zoomIn = () => {
-		setZoom((current) => (current < 1 ? current + 0.1 : 1));
+    console.log('Zoom avant');
+    setZoom((current) => (current < 1 ? current + 0.1 : 1));
   };
 
   // Fonction pour dézoomer
   const zoomOut = () => {
-		setZoom((current) => (current > 0 ? current - 0.1 : 0));
+    console.log('Zoom arrière');
+    setZoom((current) => (current > 0 ? current - 0.1 : 0));
   };
 
- // Gestion de l'événement de scan de code-barres
- const handleBarcodeScanned = async (scanningResult: { type: string; data: string }) => {
-  if (isScanning || scanningResult.data === lastScannedCode) {
-    return;
-  }
-
-  setIsScanning(true);
-  setLastScannedCode(scanningResult.data);
-
-  const { type, content } = analyzeQRCode(scanningResult.data);
-
-  try {
-    const response = await postData('scans', { type, data: scanningResult.data, userId: 1 });
-    if (response.success) {
-      navigation.navigate('Result', { type, data: content, id: response.scanId, imageUrl: response.imageUrl });
-    } else {
-      Alert.alert('Erreur', response.message);
+  // Gestion de l'événement de scan de code-barres
+  const handleBarcodeScanned = async (scanningResult: { type: string; data: string }) => {
+    if (isScanning || scanningResult.data === lastScannedCode) {
+      return;
     }
-  } catch (error) {
-			console.error("Erreur lors de la requête ! " + error);
-    Alert.alert('Erreur', 'Échec du traitement du scan.');
-  } finally {
-    setIsScanning(false);
-  }
-};
 
+    console.log('Code-barres scanné :', scanningResult.data);
 
-// Fonction pour choisir une image depuis la galerie
-const pickImage = async () => {
-  let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [4, 3],
-    quality: 1,
-  });
+    setIsScanning(true);
+    setLastScannedCode(scanningResult.data);
 
-  if (!result.canceled) {
-    console.log("Image sélectionnée :", result.assets[0].uri); // Log de l'URI de l'image
-  }
-};
+    const { type, content } = analyzeQRCode(scanningResult.data);
 
-  // Rendu de l'interface utilisateur
+    try {
+      const response = await postData('scans', { type, data: scanningResult.data, userId: 1 });
+      if (response.success) {
+        navigation.navigate('Result', { type, data: content, id: response.scanId, imageUrl: response.imageUrl });
+      } else {
+        Alert.alert('Erreur', response.message);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la requête ! ' + error);
+      Alert.alert('Erreur', 'Échec du traitement du scan.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  // Fonction pour choisir une image depuis la galerie
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      console.log('Image sélectionnée :', result.assets[0].uri);
+    }
+  };
+
   return (
-		<SafeAreaView style={styles.container}>
-			<View style={styles.backgroundHeader} />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.backgroundHeader} />
       <CameraView
         style={styles.camera}
-				facing={facing}
-				enableTorch={torch}  // Bind the torch state to the camera
-				zoom={zoom}
-				onBarcodeScanned={handleBarcodeScanned}
+        facing={facing}
+        enableTorch={torch}
+        zoom={zoom}
+        onBarcodeScanned={handleBarcodeScanned}
       >
         <View style={styles.scannerFrame}>
           <View style={styles.scannerFrameInner} />
         </View>
       </CameraView>
 
-			{/* Footer pour Historique et Favoris */}
+      {/* Footer pour Historique et Favoris */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('History')}>
           <FontAwesome name="history" size={24} color="black" />
@@ -169,11 +172,10 @@ const pickImage = async () => {
           <Text>Favoris</Text>
         </TouchableOpacity>
       </View>
-		</SafeAreaView>
+    </SafeAreaView>
   );
 };
 
-// Styles pour le composant
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -196,8 +198,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  }, 
-   scannerFrameInner: {
+  },
+  scannerFrameInner: {
     width: 200,
     height: 200,
     borderWidth: 2,
@@ -205,10 +207,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   headerActions: {
-    position: 'absolute',
-    // top: 0,
-    right: 10,
-    // backgroundColor: 'red',
     flexDirection: 'row',
     zIndex: 100004,
   },

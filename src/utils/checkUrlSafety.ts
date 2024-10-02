@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3100/api/scans/analyse'; // Assurez-vous que l'URL est correcte
+const API_URL = 'https://backend-digicard.onrender.com/api/scans/analyse'; // Assurez-vous que l'URL est correcte
 
 export const checkUrlSafety = async (url: string, scanId: number) => {
     try {

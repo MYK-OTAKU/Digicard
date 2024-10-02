@@ -26,6 +26,6 @@ export interface Scan {
     date: string;
     userId: number;
     isFavorite: boolean;
-    urlSafety: JSON;
+    urlSafety?: JSON;
     imageUrl: string; // Ajout de la propriété imageUrl
 }

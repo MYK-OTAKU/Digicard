@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useEffect, useState, useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -20,13 +19,14 @@ import AuthGuard from './src/components/AuthGuard';
 import LoadingScreen from './src/screens/LoadingScreen';
 import { navigationRef, handlePendingNavigation } from './src/navigation/navigationService';
 import * as SplashScreen from 'expo-splash-screen';
+import WelcomeScreen from './src/screens/WelcomeScreen';
 
 SplashScreen.preventAutoHideAsync();
 
 const Drawer = createDrawerNavigator();
 
 const App: React.FC = () => {
-  const [isAppReady, setIsAppReady] = useState(false); // Nouvel état de chargement
+  const [isAppReady, setIsAppReady] = useState(false);
   const { checkAuthStatus, isFingerprintAuthEnabled } = useContext(AuthContext);
 
   const loadAssetsAsync = async () => {
@@ -38,19 +38,18 @@ const App: React.FC = () => {
       Asset.loadAsync([require('./assets/logo.png')]),
     ]);
 
-    await checkAuthStatus(); // Vérification de l'authentification
-    setIsAppReady(true); // L'application est prête
-    await SplashScreen.hideAsync(); // Cache le splash screen
+    await checkAuthStatus();
+    setIsAppReady(true);
+    await SplashScreen.hideAsync();
   };
 
   useEffect(() => {
     loadAssetsAsync();
   }, []);
 
-  // Ajoutez un effet pour gérer la navigation différée quand la navigation est prête
   useEffect(() => {
     if (isAppReady) {
-      handlePendingNavigation(); // Gérer les redirections différées une fois que la navigation est prête
+      handlePendingNavigation();
     }
   }, [isAppReady]);
 
@@ -63,14 +62,10 @@ const App: React.FC = () => {
       const currentRoute = navigationRef.current.getCurrentRoute();
       console.log(`Current route: ${currentRoute?.name}`);
       if (currentRoute?.name === 'Scan') {
-        Alert.alert(
-          'Exit App',
-          'Are you sure you want to exit the app?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Yes', onPress: () => BackHandler.exitApp() },
-          ]
-        );
+        Alert.alert('Exit App', 'Are you sure you want to exit the app?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Yes', onPress: () => BackHandler.exitApp() },
+        ]);
         return true;
       } else {
         navigationRef.current?.navigate('Scan' as never);
@@ -95,7 +90,7 @@ const App: React.FC = () => {
   }, []);
 
   if (!isAppReady) {
-    return null; // Retourne null pendant le chargement
+    return null;
   }
 
   return (
@@ -108,6 +103,14 @@ const App: React.FC = () => {
               drawerContent={(props) => <CustomDrawerContent {...props} />}
             >
               <Drawer.Screen
+                name="Welcome"
+                component={WelcomeScreen}
+                options={{
+                  drawerItemStyle: { display: 'none' },
+                  headerShown: false,
+                }}
+              />
+              <Drawer.Screen
                 name="Scan"
                 component={ScanScreen}
                 options={({ navigation }) => ({
@@ -118,21 +121,33 @@ const App: React.FC = () => {
                   headerTitle: '',
                   headerLeft: () => (
                     <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
-                      <MaterialIcons name="menu" size={24} color="white" />
+                      <MaterialIcons name="menu" size={28} color="white" />
                     </TouchableOpacity>
                   ),
                   headerRight: () => (
                     <View style={styles.headerRight}>
-                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'toggleTorch' })}>
+                      <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => navigation.navigate('Scan', { action: 'toggleTorch' })}
+                      >
                         <MaterialIcons name="flash-on" size={24} color="white" />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'switchCamera' })}>
+                      <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => navigation.navigate('Scan', { action: 'switchCamera' })}
+                      >
                         <MaterialIcons name="rotate-right" size={24} color="white" />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'zoomIn' })}>
+                      <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => navigation.navigate('Scan', { action: 'zoomIn' })}
+                      >
                         <MaterialIcons name="zoom-in" size={24} color="white" />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Scan', { action: 'zoomOut' })}>
+                      <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => navigation.navigate('Scan', { action: 'zoomOut' })}
+                      >
                         <MaterialIcons name="zoom-out" size={24} color="white" />
                       </TouchableOpacity>
                     </View>

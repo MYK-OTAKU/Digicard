@@ -4,6 +4,9 @@ import * as Google from 'expo-auth-session/providers/google';
 import { useNavigation } from '@react-navigation/native';
 import { googleClientId } from '../utils/authConfig';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const WelcomeScreen = () => {
   const navigation = useNavigation();
@@ -16,7 +19,7 @@ const WelcomeScreen = () => {
     if (response?.type === 'success') {
       const { authentication } = response;
       // Envoyer le token au backend pour vérification et gestion de la session
-      fetch('http://192.168.11.105:3100/auth/google', {
+      fetch('https://backend-digicard.onrender.com/auth/google', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
