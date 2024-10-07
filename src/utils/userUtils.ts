@@ -1,6 +1,6 @@
-// src/utils/userUtils.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'uuid';
+  // src/utils/userUtils.ts
+  import AsyncStorage from '@react-native-async-storage/async-storage';
+  import { v4 as uuidv4 } from 'uuid';
 
 export const createRandomUser = async () => {
   const randomUser = {

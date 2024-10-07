@@ -9,8 +9,6 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import moment from 'moment';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { markUrlSafe, markUrlDangerous } from '../../api';
-
 
 type HistoryScreenRouteProp = RouteProp<RootStackParamList, 'History'>;
 

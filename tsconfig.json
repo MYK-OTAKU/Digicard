@@ -4,5 +4,6 @@
     "jsx": "react",
     "strict": true,
     "esModuleInterop": true,  // Add this line
+    "jsx": "react" // ou "react-jsx"
   }
 }

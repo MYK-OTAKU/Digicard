@@ -164,7 +164,7 @@ const ScanScreen: React.FC = () => {
           <FontAwesome name="history" size={24} color="black" />
           <Text>Historique</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.scanButton} onPress={pickImage}>
+        <TouchableOpacity style={styles.scanButton} >
           <Entypo name="image" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('Favorites')}>
