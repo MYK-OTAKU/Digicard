@@ -166,4 +166,36 @@ export async function deleteAllScans(userId: number): Promise<any> {
         console.error("Error deleting all scans: " + error);
         return { success: false, message: "Error deleting all scans: " + (error instanceof Error ? error.message : "Unknown error") };
     }
-}s
+}
+
+export async function toggleUrlSafety(id: number, safetyStatus: string): Promise<any> {
+    try {
+        const response = await fetch(`${API_URL}/api/scans/${id}/urlSafety`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ urlSafety: safetyStatus }),
+        });
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            if (response.ok) {
+                return { success: true, message: data.message };
+            } else {
+                return { success: false, message: "Request failed with status " + response.status };
+            }
+        } else {
+            const text = await response.text();
+            console.error("Unexpected response format:", text);
+            return {
+                success: false,
+                message: "Unexpected response format",
+            };
+        }
+    } catch (error: unknown) {
+        console.error("Error toggling URL safety: " + error);
+        return { success: false, message: "Error toggling URL safety: " + (error instanceof Error ? error.message : "Unknown error") };
+    }
+}

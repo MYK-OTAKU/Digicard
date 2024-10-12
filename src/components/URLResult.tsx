@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Share } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
@@ -6,12 +6,13 @@ import * as Clipboard from 'expo-clipboard';
 
 interface URLResultProps {
     data: string;
-    onCheckSafety: () => void;
-    urlSafety: any;
-    type: string;
+    onCheckSafety: () => void; // Fonction pour vérifier la sécurité
+    urlSafety: any; // Données de sécurité de l'URL
+    type: string; // Type de résultat (doit être 'URL' pour afficher les options de sécurité)
     date: string;
     isFavorite: boolean;
     onToggleFavorite: () => void;
+    id: number; // ID du scan
 }
 
 const openURL = (url: string) => {
@@ -33,13 +34,14 @@ const shareURL = async (url: string) => {
     }
 };
 
-export const URLResult: React.FC<URLResultProps> = ({ data, onCheckSafety, urlSafety, isFavorite, onToggleFavorite, date }) => {
-    const isSafe = urlSafety && urlSafety.safe;
+export const URLResult: React.FC<URLResultProps> = ({ data, onCheckSafety, urlSafety, isFavorite, onToggleFavorite, date, id }) => {
+    const [isSafe, setIsSafe] = useState(urlSafety?.safe);
     const isMalicious = urlSafety && urlSafety.stats.malicious > 0;
     const isSuspicious = urlSafety && urlSafety.stats.suspicious > 0;
 
     return (
-        <View style={[styles.container, 
+        <View style={[
+            styles.container,
             !urlSafety ? styles.initialContainer :
             isSafe ? styles.safeContainer :
             isMalicious ? styles.maliciousContainer : styles.suspiciousContainer
@@ -99,6 +101,14 @@ export const URLResult: React.FC<URLResultProps> = ({ data, onCheckSafety, urlSa
                     <Text style={styles.safetyText}>Safety: {urlSafety.message}</Text>
                     <Text style={styles.safetyText}>Malicious: {urlSafety.stats.malicious}</Text>
                     <Text style={styles.safetyText}>Suspicious: {urlSafety.stats.suspicious}</Text>
+                    {/* <TouchableOpacity
+                        style={[styles.actionButton, isSafe ? styles.dangerButton : styles.safeButton]}
+                        onPress={handleToggleUrlSafety}
+                    >
+                        <Text style={styles.buttonText}>
+                            {isSafe ? "Marquer Dangereux" : "Marquer Sûr"}
+                        </Text>
+                    </TouchableOpacity> */}
                 </View>
             )}
         </View>
@@ -190,6 +200,12 @@ const styles = StyleSheet.create({
     },
     warningButton: {
         backgroundColor: '#FF9800',
+    },
+    safeButton: {
+        backgroundColor: '#4CAF50',
+    },
+    dangerButton: {
+        backgroundColor: '#F44336',
     },
     buttonText: {
         color: 'white',

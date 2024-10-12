@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Linking } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Linking, TextInput } from 'react-native';
 import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
-import { fetchData, toggleFavorite, deleteScan, deleteAllScans } from '../../api';
+import { fetchData, toggleFavorite, deleteScan, deleteAllScans, toggleUrlSafety } from '../../api'; // Ajoutez toggleUrlSafety ici
 import { RootStackParamList, Scan } from '../types';
 import Footer from '../components/Footer';
 import { NavigationProp } from '@react-navigation/native';
@@ -9,6 +9,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import moment from 'moment';
 import * as LocalAuthentication from 'expo-local-authentication';
+// import { markUrlSafe, markUrlDangerous } from '../../api';
+
 
 type HistoryScreenRouteProp = RouteProp<RootStackParamList, 'History'>;
 
@@ -17,32 +19,60 @@ const HistoryScreen: React.FC = () => {
   const [originalHistory, setOriginalHistory] = useState<Scan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [sortOption, setSortOption] = useState<string>('date');
+  const [searchQuery, setSearchQuery] = useState<string>(''); // État pour la recherche
+  const [isSearching, setIsSearching] = useState<boolean>(false); // État pour afficher le champ de recherche
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<HistoryScreenRouteProp>();
 
   useEffect(() => {
-    // Customiser le header pour inclure l'icône de menu
     navigation.setOptions({
       headerRight: () => (
-        <Menu>
-          <MenuTrigger>
-            <Icon  style={styles.iconmenu} name="more-vert" size={28} color="#4A4A4A" />
-          </MenuTrigger>
-          <MenuOptions>
-            <MenuOption onSelect={() => handleMenuAction('sortByDate')}>
-              <Text style={styles.menuOptionText}>Trier par date</Text>
-            </MenuOption>
-            <MenuOption onSelect={() => handleMenuAction('sortByType')}>
-              <Text style={styles.menuOptionText}>Trier par type</Text>
-            </MenuOption>
-            <MenuOption onSelect={() => handleMenuAction('clearHistory')}>
-              <Text style={[styles.menuOptionText, { color: 'red' }]}>Vider l'historique</Text>
-            </MenuOption>
-          </MenuOptions>
-        </Menu>
+        <View style={styles.headerRight}>
+          {isSearching ? (
+            <TextInput
+              style={styles.searchBar}
+              placeholder="Rechercher..."
+              value={searchQuery}
+              onChangeText={text => {
+                setSearchQuery(text);
+                const filteredHistory = originalHistory.filter(scan =>
+                  scan.data.toLowerCase().includes(text.toLowerCase())
+                );
+                setHistory(filteredHistory);
+              }}
+              onBlur={() => {
+                setIsSearching(false);
+                setSearchQuery(''); // Réinitialiser la recherche
+                setHistory(originalHistory); // Réinitialiser l'historique
+              }}
+            />
+          ) : (
+            <TouchableOpacity onPress={() => setIsSearching(true)}>
+              <Icon name="search" size={28} color="#4A4A4A" />
+            </TouchableOpacity>
+          )}
+          <View style={styles.menuContainer}>
+            <Menu>
+              <MenuTrigger>
+                <Icon style={styles.iconmenu} name="more-vert" size={28} color="#4A4A4A" />
+              </MenuTrigger>
+              <MenuOptions>
+                <MenuOption onSelect={() => handleMenuAction('sortByDate')}>
+                  <Text style={styles.menuOptionText}>Trier par date</Text>
+                </MenuOption>
+                <MenuOption onSelect={() => handleMenuAction('sortByType')}>
+                  <Text style={styles.menuOptionText}>Trier par type</Text>
+                </MenuOption>
+                <MenuOption onSelect={() => handleMenuAction('clearHistory')}>
+                  <Text style={[styles.menuOptionText, { color: 'red' }]}>Vider l'historique</Text>
+                </MenuOption>
+              </MenuOptions>
+            </Menu>
+          </View>
+        </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, isSearching, searchQuery]);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -289,6 +319,31 @@ const HistoryScreen: React.FC = () => {
     </React.Fragment>
   );
 
+  const handleToggleUrlSafety = async (id: number, currentSafety?: string) => {
+    if (currentSafety === undefined) {
+      console.error('currentSafety is undefined');
+      return; // Ou vous pouvez définir une valeur par défaut ici
+    }
+    
+    const newSafety = currentSafety === 'safe' ? 'dangerous' : 'safe';
+    const response = await toggleUrlSafety(id, newSafety);
+    if (response.success) {
+      setHistory((prevHistory) =>
+        prevHistory.map((scan) =>
+          scan.id === id ? { ...scan, safetyStatus: newSafety } : scan
+        )
+      );
+      setOriginalHistory((prevHistory) =>
+        prevHistory.map((scan) =>
+          scan.id === id ? { ...scan, safetyStatus: newSafety } : scan
+        )
+      );
+    } else {
+      Alert.alert('Erreur', response.message);
+      console.error(`Error toggling URL safety for scan ID ${id}:`, response.message);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -390,7 +445,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },iconmenu :{
     marginRight : 10,
-  }
+  },
+  searchBar: {
+    height: 35,
+    // border : 'none',
+    borderColor: '#ccc',
+    // borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    margin: 10,
+    flex: 1,
+    backgroundColor: '#fff', // Fond blanc pour le champ de recherche
+    elevation: 1, // Légère ombre pour le champ de recherche
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10, // Ajout d'un espace à droite
+  },
+  menuContainer: {
+    marginLeft: 10, // Espace entre le champ de recherche et le menu
+  },
 });
 
 export default HistoryScreen;
