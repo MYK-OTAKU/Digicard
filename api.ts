@@ -166,4 +166,4 @@ export async function deleteAllScans(userId: number): Promise<any> {
         console.error("Error deleting all scans: " + error);
         return { success: false, message: "Error deleting all scans: " + (error instanceof Error ? error.message : "Unknown error") };
     }
-}
+}s
