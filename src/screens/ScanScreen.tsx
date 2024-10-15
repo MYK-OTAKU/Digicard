@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Button, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { FontAwesome, MaterialIcons, Entypo } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { postData } from '../../api'; // Assurez-vous que le chemin est correct
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { CompositeNavigationProp } from '@react-navigation/native';
+import { ThemeContext } from '../Context/ThemeContext';
 
 // Définir les types de navigation
 type ScanScreenNavigationProp = CompositeNavigationProp<
@@ -24,15 +25,20 @@ type Props = {
 };
 
 const ScanScreen: React.FC<Props> = ({ navigation }) => {
-  // États locaux pour gérer la caméra, la torche, le zoom, etc.
-  const [facing, setFacing] = useState<CameraType>('back'); // Caméra arrière par défaut
-  const [torch, setTorch] = useState<boolean>(false); // La torche est désactivée par défaut
-  const [zoom, setZoom] = useState(0); // Niveau de zoom initial
-  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null); // Dernier code scanné
-  const [isScanning, setIsScanning] = useState(false); // Indicateur pour éviter les scans multiples
-  const [permission, requestPermission] = useCameraPermissions(); // Permissions pour utiliser la caméra
+  const themeContext = useContext(ThemeContext);
 
-  // Vérification des permissions
+  if (!themeContext) {
+    throw new Error('ThemeContext must be used within a ThemeProvider');
+  }
+
+  const { themeColor, textColor, iconColor, scanButtonColor, scanButtonIconColor } = themeContext;
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [torch, setTorch] = useState<boolean>(false);
+  const [zoom, setZoom] = useState(0);
+  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+
   if (!permission) {
     return <View />;
   }
@@ -46,29 +52,24 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  // Fonction pour changer la caméra (avant/arrière)
   const switchCamera = () => {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   };
 
-  // Fonction pour activer/désactiver la torche
   const toggleTorch = () => {
-    setTorch((current) => !current);  // Change l'état de la torche à chaque pression de bouton
+    setTorch((current) => !current);
   };
 
-  // Fonction pour zoomer
   const zoomIn = () => {
     console.log('Zoom avant');
     setZoom((current) => (current < 1 ? current + 0.1 : 1));
   };
 
-  // Fonction pour dézoomer
   const zoomOut = () => {
     console.log('Zoom arrière');
     setZoom((current) => (current > 0 ? current - 0.1 : 0));
   };
 
-  // Gestion de l'événement de scan de code-barres
   const handleBarcodeScanned = async (scanningResult: { type: string; data: string }) => {
     if (isScanning || scanningResult.data === lastScannedCode) {
       return;
@@ -96,14 +97,12 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // Rendu de l'interface utilisateur
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColor }]}>
+      <View style={[styles.header, { backgroundColor: 'transparent' }]}>
         <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
-          <MaterialIcons name="menu" size={24} color="white" />
+          <MaterialIcons name="menu" size={24} color={iconColor} />
         </TouchableOpacity>
-        {/* <Text style={styles.headerTitle}>Scan Screen</Text> */}
       </View>
       <CameraView
         style={styles.camera}
@@ -117,62 +116,51 @@ const ScanScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </CameraView>
 
-      {/* Boutons d'action positionnés au-dessus du header */}
       <View style={styles.headerActions}>
         <TouchableOpacity style={styles.iconButton} onPress={toggleTorch}>
-          <MaterialIcons name={torch ? "flash-off" : "flash-on"} size={24} color="white" />
+          <MaterialIcons name={torch ? "flash-off" : "flash-on"} size={24} color={iconColor} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={switchCamera}>
-          <MaterialIcons name="rotate-right" size={24} color="white" />
+          <MaterialIcons name="rotate-right" size={24} color={iconColor} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={zoomIn}>
-          <MaterialIcons name="zoom-in" size={24} color="white" />
+          <MaterialIcons name="zoom-in" size={24} color={iconColor} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={zoomOut}>
-          <MaterialIcons name="zoom-out" size={24} color="white" />
+          <MaterialIcons name="zoom-out" size={24} color={iconColor} />
         </TouchableOpacity>
       </View>
 
-      {/* Footer pour Historique et Favoris */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: themeColor }]}>
         <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('History')}>
-          <FontAwesome name="history" size={24} color="black" />
-          <Text>Historique</Text>
+          <FontAwesome name="history" size={24} color={textColor} />
+          <Text style={{ color: textColor }}>Historique</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.scanButton}>
-          <Entypo name="image" size={24} color="white" />
+        <TouchableOpacity style={[styles.scanButton, { backgroundColor: scanButtonColor }]}>
+          <Entypo name="image" size={24} color={scanButtonIconColor} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('Favorites')}>
-          <FontAwesome name="heart" size={24} color="black" />
-          <Text>Favoris</Text>
+          <FontAwesome name="heart" size={24} color={textColor} />
+          <Text style={{ color: textColor }}>Favoris</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 
-
-// Styles pour le composant
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
-    position: 'absolute', // Positionner le header de manière absolue
-    top: 30, // Placer le header en haut
+    position: 'absolute',
+    top: 30,
     left: 0,
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'headerTransparent', // Couleur de fond bleue avec transparence
-    // padding: 10,
-    zIndex: 1000, // Assurez-vous que le header est au-dessus des autres éléments
-  },
-  headerTitle: {
-    color: 'white',
-    fontSize: 20,
-    marginLeft: 10,
+    zIndex: 1000,
+    backgroundColor: 'transparent', // Rendre le header transparent
   },
   camera: {
     flex: 1,
@@ -182,7 +170,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  }, 
+  },
   scannerFrameInner: {
     width: 200,
     height: 200,
@@ -192,10 +180,10 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     position: 'absolute',
-    top: 30, // Ajustez la position selon vos besoins
+    top: 30,
     right: 10,
     flexDirection: 'row',
-    zIndex: 100004, // Assurez-vous que les boutons sont au-dessus des autres éléments
+    zIndex: 100004,
   },
   iconButton: {
     padding: 10,
@@ -207,9 +195,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
     paddingVertical: 10,
-    borderTopWidth: 1,
+    // borderTopWidth: 1,
     borderTopColor: '#ddd',
   },
   footerButton: {
@@ -220,7 +207,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,

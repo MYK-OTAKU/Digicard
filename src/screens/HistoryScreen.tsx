@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback,useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Linking, TextInput } from 'react-native';
 import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import { fetchData, toggleFavorite, deleteScan, deleteAllScans, toggleUrlSafety } from '../../api'; // Ajoutez toggleUrlSafety ici
@@ -10,11 +10,19 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-m
 import moment from 'moment';
 import * as LocalAuthentication from 'expo-local-authentication';
 // import { markUrlSafe, markUrlDangerous } from '../../api';
+import { ThemeContext } from '../Context/ThemeContext';
 
 
 type HistoryScreenRouteProp = RouteProp<RootStackParamList, 'History'>;
 
-const HistoryScreen: React.FC = () => {
+const HistoryScreen: React.FC = () => {  
+  const themeContext = useContext(ThemeContext);
+
+  if (!themeContext) {
+    throw new Error('ThemeContext must be used within a ThemeProvider');
+  }
+
+  const { themeColor, textColor, iconColor, scanButtonColor, scanButtonIconColor } = themeContext;
   const [history, setHistory] = useState<Scan[]>([]);
   const [originalHistory, setOriginalHistory] = useState<Scan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -48,13 +56,13 @@ const HistoryScreen: React.FC = () => {
             />
           ) : (
             <TouchableOpacity onPress={() => setIsSearching(true)}>
-              <Icon name="search" size={28} color="#4A4A4A" />
+              <Icon name="search" size={28} color={iconColor} />
             </TouchableOpacity>
           )}
           <View style={styles.menuContainer}>
             <Menu>
               <MenuTrigger>
-                <Icon style={styles.iconmenu} name="more-vert" size={28} color="#4A4A4A" />
+                <Icon style={styles.iconmenu} name="more-vert" size={28} color={iconColor} />
               </MenuTrigger>
               <MenuOptions>
                 <MenuOption onSelect={() => handleMenuAction('sortByDate')}>

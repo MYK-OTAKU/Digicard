@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useEffect, useState, useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -16,20 +15,20 @@ import FingerprintAuthScreen from './src/components/FingerprintAuthScreen';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
 import { MenuProvider } from 'react-native-popup-menu';
 import { AuthProvider, AuthContext } from './src/Context/AuthContext';
+import { ThemeProvider, ThemeContext } from './src/Context/ThemeContext';
 import AuthGuard from './src/components/AuthGuard';
 import LoadingScreen from './src/screens/LoadingScreen';
 import { navigationRef, handlePendingNavigation } from './src/navigation/navigationService';
 import * as SplashScreen from 'expo-splash-screen';
-// import WelcomeScreen from './src/screens/WelcomeScreen';
 
 SplashScreen.preventAutoHideAsync();
 
 const Drawer = createDrawerNavigator();
 
 const App: React.FC = () => {
-  const [isAppReady, setIsAppReady] = useState(false); // Nouvel état de chargement
+  const [isAppReady, setIsAppReady] = useState(false);
   const { checkAuthStatus, isFingerprintAuthEnabled } = useContext(AuthContext);
-  const [torch, setTorch] = useState(false); // État de la torche
+  const themeContext = useContext(ThemeContext);
 
   const loadAssetsAsync = async () => {
     await Promise.all([
@@ -44,7 +43,6 @@ const App: React.FC = () => {
     setIsAppReady(true); // L'application est prête
     await SplashScreen.hideAsync(); // Cache le splash screen
   };
-
 
   useEffect(() => {
     loadAssetsAsync();
@@ -75,6 +73,9 @@ const App: React.FC = () => {
           ]
         );
         return true;
+      } else if (navigationRef.current.canGoBack()) {
+        navigationRef.current.goBack();
+        return true;
       } else {
         navigationRef.current?.navigate('Scan' as never);
         return true;
@@ -103,96 +104,146 @@ const App: React.FC = () => {
 
   return (
     <AuthProvider>
-      <MenuProvider>
-        <NavigationContainer ref={navigationRef}>
-          <AuthGuard>
-            <Drawer.Navigator
-              initialRouteName={isFingerprintAuthEnabled ? 'FingerprintAuth' : 'Scan'}
-              drawerContent={(props) => <CustomDrawerContent {...props} />}
-            >
-              <Drawer.Screen
-                name="Scan"
-                component={ScanScreen} // Utiliser le composant ScanScreen directement
-                options={({ navigation }) => ({
-                  drawerIcon: ({ color, size }) => (
-                    <MaterialIcons name="camera-alt" size={size} color={color} />
-                  ),
-                  headerShown: false, // Masquer le header par défaut
-                })}
-              />
-              <Drawer.Screen
-                name="FingerprintAuth"
-                component={FingerprintAuthScreen}
-                options={{
-                  drawerItemStyle: { display: 'none' },
-                  headerTransparent: false,
-                  headerTitle: 'Fingerprint Authentication',
-                }}
-              />
-              <Drawer.Screen
-                name="History"
-                component={HistoryScreen}
-                options={{
-                  drawerIcon: ({ color, size }) => (
-                    <MaterialIcons name="history" size={size} color={color} />
-                  ),
-                  headerTransparent: false,
-                  headerTitle: 'History',
-                }}
-              />
-              <Drawer.Screen
-                name="Favorites"
-                component={FavoritesScreen}
-                options={{
-                  drawerIcon: ({ color, size }) => (
-                    <MaterialIcons name="favorite" size={size} color={color} />
-                  ),
-                  headerTransparent: false,
-                  headerTitle: 'Favorites',
-                }}
-              />
-              <Drawer.Screen
-                name="Result"
-                component={ResultScreen}
-                options={({ navigation }) => ({
-                  drawerItemStyle: { display: 'none' },
-                  headerLeft: () => (
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
-                      <MaterialIcons name="arrow-back" size={24} color="black" />
-                    </TouchableOpacity>
-                  ),
-                })}
-              />
-              <Drawer.Screen
-                name="User"
-                component={UserScreen}
-                options={{
-                  drawerIcon: ({ color, size }) => (
-                    <FontAwesome name="user" size={size} color={color} />
-                  ),
-                  headerTransparent: false,
-                  headerTitle: 'User',
-                }}
-              />
-              <Drawer.Screen
-                name="Settings"
-                component={SettingsScreen}
-                options={{
-                  drawerIcon: ({ color, size }) => (
-                    <MaterialIcons name="settings" size={size} color={color} />
-                  ),
-                  headerTransparent: false,
-                  headerTitle: 'Settings',
-                }}
-              />
-            </Drawer.Navigator>
-          </AuthGuard>
-        </NavigationContainer>
-      </MenuProvider>
+      <ThemeProvider>
+        <MenuProvider>
+          <NavigationContainer ref={navigationRef}>
+            <AuthGuard>
+              <Drawer.Navigator
+                initialRouteName={isFingerprintAuthEnabled ? 'FingerprintAuth' : 'Scan'}
+                drawerContent={(props) => <CustomDrawerContent {...props} />}
+              >
+                <Drawer.Screen
+                  name="Scan"
+                  component={ScanScreen}
+                  options={({ navigation }) => {  
+                    const themeContext = useContext(ThemeContext);
+                    return {
+                    drawerIcon: ({ color, size }) => (
+                      <MaterialIcons name="camera-alt" size={size} color={themeContext?.themeColor} />
+                    ),
+                    headerTransparent: false,
+                    headerShown: false,
+                  }}}
+                />
+                <Drawer.Screen
+                  name="FingerprintAuth"
+                  component={FingerprintAuthScreen}
+                  options={{
+                    drawerItemStyle: { display: 'none' },
+                    headerTransparent: false,
+                    headerTitle: 'Fingerprint Authentication',
+                  }}
+                />
+                <Drawer.Screen
+                  name="History"
+                  component={HistoryScreen}
+                  options={({ navigation }) => {
+                    const themeContext = useContext(ThemeContext);
+                    return {
+                      drawerIcon: ({ color, size }) => (
+                        <MaterialIcons name="history" size={size} color={themeContext?.themeColor} />
+                      ),
+                      headerTransparent: false,
+                      headerTitle: 'History',
+                      headerTitleStyle : themeContext?.themeColor ,
+                      headerStyle: { backgroundColor: themeContext?.themeColor },
+                      headerTintColor: themeContext?.textColor,
+                      headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
+                          <MaterialIcons name="menu" size={24} color={themeContext?.iconColor} />
+                        </TouchableOpacity>
+                      ),
+                    };
+                  }}
+                />
+                <Drawer.Screen
+                  name="Favorites"
+                  component={FavoritesScreen}
+                  options={({ navigation }) => {
+                    const themeContext = useContext(ThemeContext);
+                    return {
+                      drawerIcon: ({ color, size }) => (
+                        <MaterialIcons name="favorite" size={size} color={themeContext?.themeColor} />
+                      ),
+                      headerTransparent: false,
+                      headerTitle: 'Favorites',
+                      headerStyle: { backgroundColor: themeContext?.themeColor },
+                      headerTintColor: themeContext?.textColor,
+                      headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
+                          <MaterialIcons name="menu" size={24} color={themeContext?.iconColor} />
+                        </TouchableOpacity>
+                      ),
+                    };
+                  }}
+                />
+                <Drawer.Screen
+                  name="Result"
+                  component={ResultScreen}
+                  options={({ navigation }) => {
+                    const themeContext = useContext(ThemeContext);
+                    return {
+                      drawerItemStyle: { display: 'none' },
+                      headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+                          <MaterialIcons name="arrow-back" size={24} color={themeContext?.iconColor} />
+                        </TouchableOpacity>
+                      ),
+                      headerStyle: { backgroundColor: themeContext?.themeColor },
+                      headerTintColor: themeContext?.textColor,
+                    };
+                  }}
+                />
+                <Drawer.Screen
+                  name="User"
+                  component={UserScreen}
+                  options={({ navigation }) => {
+                    const themeContext = useContext(ThemeContext);
+                    return {
+                      drawerIcon: ({ color, size }) => (
+                        <FontAwesome name="user" size={size} color={themeContext?.themeColor} />
+                      ),
+                      headerTransparent: false,
+                      headerTitle: 'User',
+                      headerStyle: { backgroundColor: themeContext?.themeColor },
+                      headerTintColor: themeContext?.textColor,
+                      headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
+                          <MaterialIcons name="menu" size={24} color={themeContext?.iconColor} />
+                        </TouchableOpacity>
+                      ),
+                    };
+                  }}
+                />
+                <Drawer.Screen
+                  name="Settings"
+                  component={SettingsScreen}
+                  options={({ navigation }) => {
+                    const themeContext = useContext(ThemeContext);
+                    return {
+                      drawerIcon: ({ color, size }) => (
+                        <MaterialIcons name="settings" size={size} color={themeContext?.themeColor} />
+                      ),
+                      headerTransparent: false,
+                      headerTitle: 'Settings',
+                      headerStyle: { backgroundColor: themeContext?.themeColor },
+                      headerTintColor: themeContext?.textColor,
+                      headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconButton}>
+                          <MaterialIcons name="menu" size={24} color={themeContext?.iconColor} />
+                        </TouchableOpacity>
+                      ),
+                    };
+                  }}
+                />
+              </Drawer.Navigator>
+            </AuthGuard>
+          </NavigationContainer>
+        </MenuProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 };
-
 
 const styles = StyleSheet.create({
   iconButton: {

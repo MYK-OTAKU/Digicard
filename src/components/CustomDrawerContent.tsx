@@ -1,9 +1,18 @@
-import React from 'react';
-import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import React, { useContext } from 'react';
+import { DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { ThemeContext } from '../Context/ThemeContext';
 
 const CustomDrawerContent = (props: any) => {
+  const themeContext = useContext(ThemeContext);
+
+  if (!themeContext) {
+    throw new Error('ThemeContext must be used within a ThemeProvider');
+  }
+
+  const { textColor,themeColor, iconColor } = themeContext;
+
   return (
     <DrawerContentScrollView {...props}>
       <View style={styles.header}>
@@ -11,7 +20,7 @@ const CustomDrawerContent = (props: any) => {
           source={require('../../assets/Designer.jpeg')} // Chemin relatif à votre image locale
           style={styles.profileImage}
         />
-        <Text style={styles.profileName}>Digicard-Qr-Code-Scanner</Text>
+        <Text style={[styles.profileName, { color: themeColor }]}>Digicard-Qr-Code-Scanner</Text>
       </View>
       <DrawerItemList {...props} />
       {/* <DrawerItem
